@@ -9,6 +9,7 @@
 library(tidyverse)
 library(dplyr)
 library(limma)
+library(reshape2)
 
 
 ############## Microarray Differential Expression with Limma ##################
@@ -315,5 +316,212 @@ nx_first_set <- ((N*n0_first_set) - (n1_first_set*n2_first_set)) / (n0_first_set
 
 nx_second_set <- ((N*n0_second_set) - (n1_second_set*n2_second_set)) / (n0_second_set+N-n1_second_set-n2_second_set)
 
+nx_third_set <- ((N*n0_third_set) - (n1_third_set*n2_third_set)) / (n0_third_set+N-n1_third_set-n2_third_set)
+
+
+#'@details Finally, we can calculate the concordance. According to the Wang paper
+#'the formula for the concordance value is 
+#'
+#'                   n0 = 2(nx) / (n1+n2)  
     
 
+concordance_1 <- (2*nx_first_set) / (n1_first_set - n2_first_set)
+concordance_2 <- (2*nx_second_set) / (n1_second_set - n2_second_set)
+concordance_3 <- (2*nx_third_set) / (n1_third_set - n2_third_set)
+Concordance_Values <- c(concordance_1, concordance_2, concordance_3)
+
+#There are the DEG values for the microarray analysis
+Number_of_DEGs <- c(n1_first_set, n1_second_set, n1_third_set)
+
+#These are the DEG values for the RNA-Seq analysis
+DEGs_sequence <- c(n2_first_set, n2_second_set, n2_second_set)
+
+concordance_DEGs_df <- data.frame(Concordance_Values, Number_of_DEGs)
+
+concordance_DEGs_sequence_df <- data.frame(Concordance_Values, DEGs_sequence)
+
+#'@details We can now go ahead and plot the concordance values against the 
+#'number of DEGs from both the microarray analysis as well as the RNA-Seq 
+#'analysis  
+
+concordance_DEGs_plot <- 
+  ggplot(concordance_DEGs_df, aes(x = Number_of_DEGs, y = Concordance_Values))+
+  geom_point(color = '#8EF02B', fill = '#9B82FF')+
+  theme_bw()+
+  labs(xlab = 'Quantity of DEGs from Microarray Analysis')+
+  theme(legend.position = "bottom")
+
+
+concordance_DEGs_sequence_plot <- 
+  ggplot(concordance_DEGs_sequence_df, aes(x = DEGs_sequence, y = Concordance_Values))+
+  geom_point(color = '#8EF02B', fill = '#9B82FF')+
+  theme_bw()+
+  labs(xlab = 'Quantity of DEGs from Microarray Analysis')+
+  theme(legend.position = "bottom")
+
+
+#'@details Next we need to split the differential expressed genes from both 
+#'methodologies, DESeq and Limma, into two different groups: 'above-median' 
+#'and also 'below-median'.  
+#'
+#'We need to find the median of both the AveExpr row in the limma results 
+#'and the baseMean limma results 
+
+#Here we can calculate the median via the median() function
+median_deseq_AhR <- median(deseq_AhR$baseMean)
+
+#Here we want all the baseMean values that are greater than the median value 
+#of the baseMean column 
+above_median_deseq_AhR <- deseq_AhR %>%
+  filter(baseMean > median_deseq_AhR )
+
+#Here we want all the baseMean values that are less than the median value 
+#of the baseMean column 
+below_median_deseq_AhR <- deseq_AhR %>%
+  filter(baseMean < median_deseq_AhR )
+
+#Median value, above, and below filtering for 3_METHYLCHOLANTHRENE
+median_limma_methyl <- median(methyl_info$AveExpr)
+
+above_median_limma_methyl <- methyl_info %>%
+  filter(AveExpr > median_limma_methyl)
+
+below_median_limma_methyl <- methyl_info %>%
+  filter(AveExpr < median_limma_methyl)
+
+#Median value, above, and below filtering for DESeq genes in deseq_car_pxr
+median_deseq_car_pxr <- median(deseq_car_pxr$baseMean)
+
+above_median_deseq_car_pxr <- deseq_car_pxr %>%
+  filter(baseMean > median_deseq_car_pxr)
+
+below_deseq_car_pxr <- deseq_car_pxr %>%
+  filter(baseMean < median_deseq_car_pxr)
+
+#Median value, above, and below filtering for limma genes in flucanazole
+median_limma_flucanazole_info <- median(flucanazole_info$AveExpr)
+
+above_median_limma_flucanazole_info <- flucanazole_info %>%
+  filter(AveExpr > median_limma_flucanazole_info)
+
+below_median_limma_flucanazole_info <- flucanazole_info %>%
+  filter(AveExpr < median_limma_flucanazole_info)
+
+
+#Median value, above, and below filtering for DESeq genes in deseq_PPARA
+median_deseq_PPARA <- median(deseq_PPARA$baseMean)
+
+above_median_deseq_PPARA <- deseq_PPARA %>%
+  filter(baseMean > median_deseq_PPARA)
+
+below_median_deseq_PPARA <- deseq_PPARA %>%
+  filter(baseMean < median_deseq_PPARA)
+
+
+#Median value, above, and below filtering for DESeq genes in deseq_PPARA
+median_limma_pirinixic_acid_info <- median(pirinixic_acid_info$AveExpr)
+
+above_median_limma_pirinixic_acid_info <- pirinixic_acid_info %>%
+  filter(AveExpr > median_limma_pirinixic_acid_info) 
+
+below_median_limma_pirinixic_acid_info <- pirinixic_acid_info %>%
+  filter(AveExpr < median_limma_pirinixic_acid_info)
+
+#'@details Now that we have split all of the DE genes into above-median 
+#'and below-median groups, we now have to compute the concordance of each 
+#'group of genes. All of the calculations below will be for the 
+#'above-genes 
+#'
+
+combo_above_1 <- merge(above_median_limma_methyl, map_probe_id_file, by = "Gene")
+combo_above_1 <- merge(combo_above_1, above_median_deseq_AhR, by = 'REFSEQ')
+
+combo_above_2 <- merge(above_median_limma_flucanazole_info, map_probe_id_file, by = 'Gene')
+combo_above_2 <- merge(combo_above_2, above_median_deseq_car_pxr, by = 'REFSEQ')
+
+combo_above_3 <- merge(above_median_limma_pirinixic_acid_info, map_probe_id_file, by = "Gene")
+combo_above_3 <- merge(combo_above_3, above_median_deseq_PPARA, by = 'REFSEQ')
+
+n0_first_set_above <- nrow(combo_above_1)
+n1_first_set_above <- nrow(above_median_limma_methyl)
+n2_first_set_above <- nrow(above_median_deseq_AhR)
+
+n0_second_set_above <- nrow(combo_above_2)
+n1_second_set_above <- nrow(above_median_limma_flucanazole_info)
+n2_second_set_above <- nrow(above_median_deseq_car_pxr)
+
+n0_third_set_above <- nrow(combo_above_3)
+n1_third_set_above <- nrow(above_median_limma_pirinixic_acid_info)
+n2_third_set_above <- nrow(above_median_deseq_PPARA)
+
+nx_first_set_above <- ((N*n0_first_set_above) - (n1_first_set_above*n2_first_set_above)) / (n0_first_set_above+N-n1_first_set_above-n2_first_set_above)
+nx_second_set_above <- ((N*n0_second_set_above) - (n1_second_set_above*n2_second_set_above)) / (n0_second_set_above+N-n1_second_set_above-n2_second_set_above)
+nx_third_set_above <- ((N*n0_third_set_above) - (n1_third_set_above*n2_third_set_above)) / (n0_third_set_above+N-n1_third_set_above-n2_third_set_above)
+
+concordance_1_above <- (2*nx_first_set_above) / (n1_first_set_above - n2_first_set_above)
+concordance_2_above <- (2*nx_second_set_above) / (n1_second_set_above - n2_second_set_above)
+concordance_3_above <- (2*nx_third_set_above) / (n1_third_set_above - n2_third_set_above)
+
+
+#'@details Now that we have calculate the concordance values for the above 
+#'genes we now have to compute the concordance for the below genes. The 
+#'calculations below will deal with the below median genes. 
+
+combo_below_1 <- merge(below_median_limma_methyl, map_probe_id_file, by = "Gene")
+combo_below_1 <- merge(combo_below_1, below_median_deseq_AhR, by = 'REFSEQ')
+
+combo_below_2 <- merge(below_median_limma_flucanazole_info, map_probe_id_file, by = 'Gene')
+combo_below_2 <- merge(combo_below_2, below_deseq_car_pxr, by = 'REFSEQ')
+
+combo_below_3 <- merge(below_median_limma_pirinixic_acid_info, map_probe_id_file, by = "Gene")
+combo_below_3 <- merge(combo_below_3, below_median_deseq_PPARA, by = 'REFSEQ')
+
+n0_first_set_below <- nrow(combo_below_1)
+n1_first_set_below <- nrow(below_median_limma_methyl)
+n2_first_set_below <- nrow(below_median_deseq_AhR)
+
+n0_second_set_below <- nrow(combo_below_2)
+n1_second_set_below <- nrow(below_median_limma_flucanazole_info)
+n2_second_set_below <- nrow(below_deseq_car_pxr)
+
+n0_third_set_below <- nrow(combo_below_3)
+n1_third_set_below <- nrow(below_median_limma_pirinixic_acid_info)
+n2_third_set_below <- nrow(below_median_deseq_PPARA)
+
+
+nx_first_set_below <- ((N*n0_first_set_below) - (n1_first_set_below*n2_first_set_below)) / (n0_first_set_below+N-n1_first_set_below-n2_first_set_below)
+nx_second_set_below <- ((N*n0_second_set_below) - (n1_second_set_below*n2_second_set_below)) / (n0_second_set_below+N-n1_second_set_below-n2_second_set_below)
+nx_third_set_below <- ((N*n0_third_set_below) - (n1_third_set_below*n2_third_set_below)) / (n0_third_set_below+N-n1_third_set_below-n2_third_set_below)
+
+
+concordance_1_below <- (2*nx_first_set_below) / (n1_first_set_below - n2_first_set_below)
+concordance_2_below <- (2*nx_second_set_below) / (n1_second_set_below - n2_second_set_below)
+concordance_3_below <- (2*nx_third_set_below) / (n1_third_set_below - n2_third_set_below)
+
+
+#'@details Now that we have all of the concordances for total the DE genes, 
+#'those that fall below the median value, and those that are above the median 
+#'value, we can produce a combined bar plot with all this information! First, 
+#'we need to combine the data that we have produced 
+
+combined_3_methyl <- c(concordance_1, concordance_1_above, concordance_1_below)
+combined_fluconazole <- c(concordance_2, concordance_2_above, concordance_2_below)
+combined_pirinixic_acid <- c(concordance_3, concordance_3_above, concordance_3_below)
+
+combined_bar_plot <- as.data.frame(rbind(combined_3_methyl, combined_fluconazole, combined_pirinixic_acid))
+MOA <- c('AhR/3-methylchol', 'car_pxr/fluconazole', 'PPARA/pirinixic_acid')
+row.names(combined_bar_plot) <- MOA
+concordance_sections <- c('All DE Genes', "Above Median", "Below Median")
+colnames(combined_bar_plot) <- c('All DE Genes', "Above Median", "Below Median")
+
+combined_bar_plot <- tibble::rownames_to_column(combined_bar_plot, 'row_names')
+
+combined_bar_plot_melt <- melt(combined_bar_plot, 'row_names')
+
+concordance_bar_plot <- 
+  ggplot(combined_bar_plot_melt, aes(x = row_names, y = value)) +
+  geom_bar(aes(fill = variable), stat = 'identity') +
+  theme(legend.position = "bottom") +
+  theme_bw()
+
+concordance_bar_plot
