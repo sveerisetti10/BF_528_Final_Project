@@ -422,7 +422,7 @@ below_median_deseq_PPARA <- deseq_PPARA %>%
   filter(baseMean < median_deseq_PPARA)
 
 
-#Median value, above, and below filtering for DESeq genes in deseq_PPARA
+#Median value, above, and below filtering for limma genes in pirinixic_acid
 median_limma_pirinixic_acid_info <- median(pirinixic_acid_info$AveExpr)
 
 above_median_limma_pirinixic_acid_info <- pirinixic_acid_info %>%
@@ -435,7 +435,6 @@ below_median_limma_pirinixic_acid_info <- pirinixic_acid_info %>%
 #'and below-median groups, we now have to compute the concordance of each 
 #'group of genes. All of the calculations below will be for the 
 #'above-genes 
-#'
 
 combo_above_1 <- merge(above_median_limma_methyl, map_probe_id_file, by = "Gene")
 combo_above_1 <- merge(combo_above_1, above_median_deseq_AhR, by = 'REFSEQ')
@@ -529,5 +528,4 @@ concordance_bar_plot <-
   theme_bw()
 
 concordance_bar_plot
-
 
