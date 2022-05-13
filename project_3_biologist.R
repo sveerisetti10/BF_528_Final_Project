@@ -7,7 +7,7 @@ library(tidyverse)
 library(dplyr)
 
 #'@details The purpose here is to filter the deseq .csv file so garner only 
-#'key genes 
+#'significant genes 
 deseq_Ahr <- read.csv("/usr4/bf528/sv/Documents/BF_528_Individual_Project/Project_3_Biologist_Role/DESeqAhRresults.csv")
 colnames(deseq_Ahr)[1] <- 'gene'
 
@@ -18,7 +18,7 @@ deseq_PPARA <- read.csv("/usr4/bf528/sv/Documents/BF_528_Individual_Project/Proj
 colnames(deseq_PPARA)[1] <- 'gene'
 
 
-#'@details The paper filtered the DE genes based on p value that was less than 0.05.
+#'@details The Wang et. al paper filtered the DE genes based on p value that was less than 0.05.
 #'as well as a fold change that is greater than 1.5. They considered these 
 #'genes to be differentially expressed. Figure 4 of the paper shows this.  
 deseq_Ahr_filtered <- deseq_Ahr %>%
@@ -52,10 +52,11 @@ deseq_PPARA_filtered_z <- deseq_PPARA_filtered_z[, -c(1)]
 deseq_PPARA_filtered_z <- write_csv(deseq_PPARA_filtered_z, "/usr4/bf528/sv/Documents/BF_528_Individual_Project/Project_3_Biologist_Role/deseq_PPARA_filtered_z_filtered.csv")
 
 
-deseq_CAR_PXR_filtered <- deseq_Ahr_filtered[, 2]
+deseq_Ahr_filtered <- deseq_Ahr_filtered[, 2]
+#deseq_CAR_PXR_filtered <- as.data.frame(deseq_CAR_PXR_filtered)
 deseq_CAR_PXR_filtered <- deseq_CAR_PXR_filtered[, 2]
 deseq_PPARA_filtered <- deseq_PPARA_filtered[, 2]
-deseq_combo_list <- list(deseq_CAR_PXR_filtered,deseq_CAR_PXR_filtered, deseq_PPARA_filtered)
+deseq_combo_list <- list(deseq_Ahr_filtered, deseq_CAR_PXR_filtered, deseq_PPARA_filtered)
 deseq_combo <- deseq_combo_list %>% reduce(full_join, by = 'gene')
 deseq_combo <- as.matrix(deseq_combo)
 deseq_combo <- as.data.frame(deseq_combo)
@@ -65,7 +66,7 @@ deseq_combo <- write_csv(deseq_combo, "/usr4/bf528/sv/Documents/BF_528_Individua
 
 
 #'@details Here we want to filter the counts matrix. Our goal here is to 
-#'add an average count column and coefficient of variation metrix   
+#'add an average count column and coefficient of variation matrix   
 AhR_deseq_ncounts <- read.csv("/usr4/bf528/sv/Documents/BF_528_Individual_Project/Project_3_Biologist_Role/AhR_deseq_norm_counts.csv")
 colnames(AhR_deseq_ncounts)[1] <- 'gene'
 
@@ -102,6 +103,7 @@ combination <- combination %>%
 
 combination <- combination[, -c(19:21)]
 combination_matrix <- as.matrix(combination)
-deseq_filtered_heatmap <- heatmap(combination_matrix, cexRow = 0.8, cexCol = 0.8, 
+deseq_filtered_heatmap <- heatmap(combination_matrix, cexRow = 0.7, cexCol = 0.7, 
                                   col = terrain.colors(256))
 
+deseq_filtered_heatmap
