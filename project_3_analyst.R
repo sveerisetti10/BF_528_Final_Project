@@ -17,8 +17,6 @@ library(reshape2)
 #'@details We can utilize the next few steps for each chemical we decide to 
 #'utilize. For example, we will only be using the chemical: 3-METHYLCHOLANTHRENE
 #'for the next few steps. 
-#'
-#'
 
 data <- read_csv('/project/bf528/project_3/groups/group_6_mic_info.csv')
 
@@ -57,13 +55,8 @@ t_limma <- t_limma[with(t_limma, order(-padj)), ]
 t_limma_written <- write_csv(t_limma, "/usr4/bf528/sv/Documents/BF_528_Individual_Project/Project_1_Analyst_Role/limma_3_METHYLCHOLANTHRENE_.csv")
 
 
-
 #'@details We will only be using the chemical: FLUCONAZOLE
 #'for the next few steps. 
-#'
-#'
-#'We will start by designing a model matrix so that we can utilize 
-#'it in the lmfit() function 
 
 data <- read_csv('/project/bf528/project_3/groups/group_6_mic_info.csv')
 
@@ -98,10 +91,6 @@ t_limma_written <- write_csv(t_limma, "/usr4/bf528/sv/Documents/BF_528_Individua
 
 #'@details We will only be using the chemical: PIRINIXIC_ACID
 #'for the next few steps. 
-#'
-#'
-#'We will start by designing a model matrix so that we can utilize 
-#'it in the lmfit() function 
 
 data <- read_csv('/project/bf528/project_3/groups/group_6_mic_info.csv')
 
@@ -179,53 +168,64 @@ methyl_info <- read_csv("/usr4/bf528/sv/Documents/BF_528_Individual_Project/Proj
 methyl_histogram <- 
   ggplot(data = methyl_info, aes(x = logFC)) +
   geom_histogram(color = '#8EF02B', fill = '#9B82FF') +
-  ggtitle('logFC vs. count') + 
+  ggtitle('logFC of Significant Genes vs. count') + 
   theme_bw() +
   theme(legend.position = "bottom") 
+
+methyl_histogram
 
 methyl_volcano_plot <- 
   ggplot(data = methyl_info, aes(x = logFC, y = -log(P.Value))) +
   geom_point(color = '#8EF02B', fill = '#9B82FF') +
-  ggtitle('logFC vs. count') + 
+  ggtitle('logFC vs. -log(P.Value)') + 
   theme_bw() +
   theme(legend.position = "bottom") 
 
+methyl_volcano_plot
 
 
 flucanazole_info <- read_csv("/usr4/bf528/sv/Documents/BF_528_Individual_Project/Project_1_Analyst_Role/limma_flucon_filtered.csv")
 
 flucanazole_histogram <- 
   ggplot(data = flucanazole_info, aes(x = logFC)) +
-  geom_histogram(color = 'red', fill = 'blue') +
+  geom_histogram(color = '#8EF02B', fill = '#9B82FF') +
   ggtitle('logFC vs. count') + 
   theme_bw() +
   theme(legend.position = "bottom") 
 
+flucanazole_histogram
+
+
 flucanazole_volcano_plot <- 
   ggplot(data = flucanazole_info, aes(x = logFC, y = -log(P.Value))) +
   geom_point(color = '#8EF02B', fill = '#9B82FF') +
-  ggtitle('logFC vs. count') + 
+  ggtitle('logFC vs. -log(P.Value)') + 
   theme_bw() +
   theme(legend.position = "bottom")
 
+flucanazole_volcano_plot 
 
 
 pirinixic_acid_info <- read_csv("/usr4/bf528/sv/Documents/BF_528_Individual_Project/Project_1_Analyst_Role/limma_pirinixic_filtered.csv")
 
 pirinixic_acid_histogram <- 
   ggplot(data = pirinixic_acid_info, aes(x = logFC)) +
-  geom_histogram(color = 'blue', fill = 'red') +
+  geom_histogram(color = '#8EF02B', fill = '#9B82FF') +
   ggtitle('logFC vs. count') + 
   theme_bw() +
   theme(legend.position = "bottom")
+
+pirinixic_acid_histogram
+
 
 pirinixic_acid_volcano_plot <- 
   ggplot(data = pirinixic_acid_info, aes(x = logFC, y = -log(P.Value))) +
   geom_point(color = '#8EF02B', fill = '#9B82FF') +
-  ggtitle('logFC vs. count') + 
+  ggtitle('logFC vs. -log(P.Value)') + 
   theme_bw() +
   theme(legend.position = "bottom")
 
+pirinixic_acid_volcano_plot
 
 
 ############ Concordance between microarray and RNA-Seq DE Genes ############ 
@@ -233,7 +233,7 @@ pirinixic_acid_volcano_plot <-
 map_probe_id_file <- read_csv("/usr4/bf528/sv/Documents/BF_528_Individual_Project/Project_1_Analyst_Role/Part_6/refseq_affy_map.csv")
 
 #'@details Next, we want to map the Affymetrix Probe IDs that are from the 
-#'microarray analysis section to the refSeq identifies taht are used by the 
+#'microarray analysis section to the refSeq identifies that are used by the 
 #'RNA-Seq analysis. It is important that "common" variables are formed between
 #'the dataframes so that they can be merged together. 
 
@@ -243,7 +243,7 @@ deseq_car_pxr <- read_csv('/projectnb2/bf528/users/lava-lamp/BF528_Project_3/ana
 deseq_PPARA <- read_csv('/projectnb2/bf528/users/lava-lamp/BF528_Project_3/analysis/DESeqPPARAresults.csv')
 
 #'Filter the DESeq files so only significant genes remain.This means that we 
-#'need to take find p < 0.05
+#'need to take find pvalue < 0.05
 
 deseq_AhR <- deseq_AhR %>%
   filter(pvalue < 0.05)
@@ -322,7 +322,7 @@ nx_third_set <- ((N*n0_third_set) - (n1_third_set*n2_third_set)) / (n0_third_set
 #'@details Finally, we can calculate the concordance. According to the Wang paper
 #'the formula for the concordance value is 
 #'
-#'                   n0 = 2(nx) / (n1+n2)  
+#'                   concordance = 2(nx) / (n1+n2)  
     
 
 concordance_1 <- (2*nx_first_set) / (n1_first_set - n2_first_set)
@@ -348,17 +348,21 @@ concordance_DEGs_plot <-
   ggplot(concordance_DEGs_df, aes(x = Number_of_DEGs, y = Concordance_Values))+
   geom_point(color = '#8EF02B', fill = '#9B82FF')+
   theme_bw()+
+  geom_smooth(method=lm, se=FALSE)+
   labs(xlab = 'Quantity of DEGs from Microarray Analysis')+
   theme(legend.position = "bottom")
 
+
+concordance_DEGs_plot
 
 concordance_DEGs_sequence_plot <- 
   ggplot(concordance_DEGs_sequence_df, aes(x = DEGs_sequence, y = Concordance_Values))+
   geom_point(color = '#8EF02B', fill = '#9B82FF')+
   theme_bw()+
-  labs(xlab = 'Quantity of DEGs from Microarray Analysis')+
+  geom_smooth(method=lm, se=FALSE)+
   theme(legend.position = "bottom")
 
+concordance_DEGs_sequence_plot
 
 #'@details Next we need to split the differential expressed genes from both 
 #'methodologies, DESeq and Limma, into two different groups: 'above-median' 
@@ -525,3 +529,5 @@ concordance_bar_plot <-
   theme_bw()
 
 concordance_bar_plot
+
+
